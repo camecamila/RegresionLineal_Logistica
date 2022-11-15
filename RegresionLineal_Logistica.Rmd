@@ -1,7 +1,7 @@
 ---
-title: "Final Estadistica II  | Cohorte 2021"
-author: "Barbagelata, Camila Inés"
-date: "Fecha de Entrega `r format(Sys.time(), '%d-%m-%Y')`"
+title: "Regresión Lineal Múltiple - Regresión Logística"
+author: "Barbagelata, Camila"
+date: " `r format(Sys.time(), '%d-%m-%Y')`"
 output:
   html_document:
     toc: true
@@ -11,12 +11,7 @@ output:
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
-
-  <img src="C:/Users/cbarbagelata/OneDrive - Obra Social Acción Social de Empresarios Asociación Civil/Escritorio/Camila B/Estadistica II/Final/untref.jpg" width="250px">
-
-</p>
-
-
+  
 ```{r, echo=FALSE}
 library (tidyverse)
 library(ggpubr)
@@ -38,124 +33,19 @@ library(MASS)
 library(olsrr)
 pacman::p_load(tidyverse,ggpubr,rstatix,plyr,pastecs,summarytools,RCurl,reshape2,pracma,raster,dplyr,gmodels,DescTools, haven, reshape2, Hmisc, olsrr, fastDummies)
 ```
+ 
+##   Regresión Lineal Multiple   
 
+Analizar el papel de las armas de fuego en el aumento de la tasa de homicidios. Para esto, se requiere construir una ecuación de regresión que relacione la Tasa de Homicidios con el resto de las variables disponibles, y determinar si son útiles para predecir la Tasa de Homicidios.  Para determinar en que medida las variables se constituyen como variables predictoras de la variable dependiente, debemos construir un modelo de regresion lineal multiple. 
 
-* A lo largo del documento se presenta la resolución de los tres ejercicios que componen el final de Estadistica II
-
----
-
-## Ejercicio 1. ANOVA  | Ejercicio pasteles
-
-A partir de los datos brindados por el ejercicio se intenta resolver los siguientes puntos:
-
-1. Existen diferencias estadísticamente significativas debidas al tipo de harina utilizada?
-
-2. Existen diferencias estadísticamente significativas debidas al nivel de endulzamiento
-utilizado?
-
-3. Existe interacción estadísticamente significativa entre los factores considerados?
-
-4. Realizar los gráficos de medias e interpretar.
-
-Creacion de la base de datos (con variables factor)
-```{r, echo=true}
-azucar<-  factor(gl(4, 2, label=c("0", "50", "75", "100")))
-harina <- rep (seq(1,2),12)
-harina <- factor(harina, labels= c("General","Tortas"))
-densidad <- c(0.9,0.91,0.86,0.88,0.93,0.86,0.79,0.86,0.87,0.9,0.89,0.82,0.88,0.85,0.82,0.85,0.9,0.8,0.91,0.83,0.87,0.8,0.8,0.85)
-BasePasteles<- data.frame(azucar, harina, densidad)
-BasePasteles
-```
----
-
-### Resolución
-
-**Punto 1, 2, 3**. Existen diferencias estadísticamente significativas debidas al tipo de harina utilizada? Existen diferencias estadísticamente significativas debidas al nivel de endulzamiento
-utilizado? Existe interacción estadísticamente significativa entre los factores considerados?
-
-Dado que se desea analizar los efectos de dos factores distintos, que son el tipo de harina y el porcentaje de endulzamiento, sobre los atributos físicos de la torta, debemos aplicar el **metodo del analisis de varianza de dos factores**. 
-
-Para su aplicacion resulta indispensable realizar un analisis descriptivo de los datos y el chequeo de los supuestos. 
-
-A. Analisis descriptivo: Armado de tablas con resumenes estadisticos. 
-```{r}
-BasePasteles %>% group_by(azucar, harina) %>% get_summary_stats(densidad,type="mean_sd")
-```
-Observamos que las medias de densidad se asemejan entre los distintos grupos definidos por las dos variables factor, y aumenta en aquellas tortas con relizadas con una menor concentracion de azucar. 
-Al observar los valores sd, notamos que las tortas realizadas con una concentracion de azucar al 100 tienen mayor homogeneidad. 
-
-B. Chequeo de los requisitos para realizar anova de dos factores:
-
-* Testeo de normalidad de las variables
-```{r testeo de normalidad, echo=TRUE}
-BasePasteles %>% group_by(harina, azucar) %>% shapiro_test(densidad)
-```
-Teniendo en cuenta que nuestra hipotesis nula es que los datos se distribuyen normalmente (H1= los datos no se distribuyen normalmente), se concluye que:
-
-Los datos se distribuyen normalmente con excepcion del grupo definido por una concentracion 0 de azucar y con harina general y, aquellos grupos con 100 de azucar y harina de tortas. En estos dos grupos el valor de p es menor al nivel de significancia razonable (0,05). 
-
-Dado que en la mayoria de los casos este supuesto de normalidad se cumple y teniendo en cuenta que no es un requisito muy estricto para realizar anova de dos factores, procedemos con el analisis.
-
-* Testeo de homocedasticidad de varianzas
-```{r}
-BasePasteles %>% levene_test(densidad~ azucar*harina)
-```
-Nuestra hipotesis nula es que las varianzas son iguales (homocedasticidad), caso contrario las varianzas no son iguales (h1). 
-
-A partir de los resultados (p = 0.88, por ende p>alfa) no rechazo Ho. Hay homocedasticidad, las varianzas son iguales para el nivel de significancia establecido. 
-
-Una vez chequeados estos dos supuestos (normalidad y homocedasticidad), realizamos el analisis de varianza de dos factores. 
-
-C. Prueba de interaccion entre los dos factores
-
-```{r ANOVA DE DOS FACTORES SIN INTERACCION}
-SinInteraccion <- aov(densidad ~ azucar+harina, data=BasePasteles)
-summary(SinInteraccion)
-```
-A partir de los resultados (P>α) en ambas variables factor, concluimos que no existe diferencia significativa entre las medias de las densidades de las tortas en ninguno de los grupos definidos. 
-
-```{r ANOVA DE DOS FACTORES CON INTERACCION}
-ConInteraccion<- aov(densidad ~ azucar*harina, data=BasePasteles)
-summary(ConInteraccion)
+```{r cargamos BD, echo=TRUE}
+BasePasteles <- read_sav("C:/Users/cbarbagelata/OneDrive - Obra Social Acción Social de Empresarios Asociación Civil/Escritorio/Camila B/Estadistica II/Final/p301.sav")
+head(BasePasteles)
 ```
 
-Dado que nuestra hipotesis nula (Ho) es que no existe interacción entre los dos factores, observando que P<α, se rechaza hipótesis nula. Se concluye que existe un efecto de interacción entre los dos factores, esto significa que, en presencia de un factor, el otro se comporta de manera diferente.  
-
-
-**Respuesta - Conclusiones (pto 1, 2, 3)**: 
-Resumiendos las conclusiones a las que llegamos hasta el momento:
-* Existen diferencias debidas al tipo de harina utilizada, debidas al nivel de endulzamiento y debido a la interaccion entre los factores. 
-
-**Punto 4** Realizar los gráficos de medias e interpretar. 
-
-Para averiguar como se da la interaccion entre los factores, es decir, si la interaccion entre las dos variables tiene un efecto propio sobre el comportamiento de la variable dependiente o no.Para oberservar de que manera se da esta interaccion, realizamos un **grafico de interacción de medias** que en los casos de ausencia de interaccion se visualiza como dos rectas paralelos y si hay interaccion se entrecruzan: 
-
-```{r grarico de interaccion}
-with(BasePasteles, interaction.plot(azucar, harina, densidad, fun = mean, main = "Grafico de interaccion", xlab = "azúcar", ylab = "Densidad"))
-```
-
-La línea punteada corresponde a la harina general y la linea continua a la harina para tortas, en el eje horizontal encontramos las distintas concentracions de azucar y en el eje vertical las densidades. 
-
-**Respuesta - Conclusiones (pto 4)**: 
-Observamos que las tortas realizadas con harina general, su densidad aumenta pero cuando la concentracion de azucar supera el 75% cae marcadamente. En cambio, las tortas realizadas con harina para tortas se observa que la mayor densidad está dada por la menor concentración de azúcar reduciéndose a medida que ésta aumenta, volviendo a aumentar cuando se concentra al 100%. 
-
----
-
-## Ejercicio 2. Regresión Lineal Multiple  | Ejercicio DETROIT
-
-En un estudio que investiga el papel de las armas de fuego en el aumento de la tasa de homicidios de Detroit, se recogieron datos para los años 1961-1973. La variable de respuesta (la tasa de homicidios) y las variables potencialmente predictoras del comportamiento de ésta, se describen en el archivo p301.sav. 
-
-Se requiere construir una ecuación de regresión que relacione la Tasa de Homicidios (variable H), con el resto de las variables disponibles, y determinar si estas variables son útiles para predecir la Tasa de Homicidios y tambien los siguientes puntos:
-
-1.  Saber cuál es el nivel de asociación lineal de las variables predictoras con la variable H.
-
-2.  Realizar una regresión lineal múltiple, seleccionando los mejores predictores entre las variables independientes disponibles, utilizando un método de selección automática. Describir el proceso de selección automática utilizado. (Sug. Considerar como probabilidad de entrada 0.10 y de salida del modelo 0.15). 
-
-3.  Informar qué información da el coeficiente de determinación. 
-
+ 
 4.  Reconocer cuáles son los supuestos necesarios para definir la prueba inferencial de los estimadores de los parámeros. 
 
-5.  Analizar la bondad del ajuste del modelo obtenido, comentando los indicadores y/o test que considera.
 
 6.  Realizar un análisis de los residuos del modelo para evaluar el cumplimiento de los supuestos. Para esto, realizar gráficos de los residuos con el valor predicho.
 
@@ -164,22 +54,17 @@ Se requiere construir una ecuación de regresión que relacione la Tasa de Homic
 8.  Analizar la presencia de observaciones atípicas y/o influyentes.
  
 Creacion de la base de datos: 
-```{r cargamos BD, echo=TRUE}
-BasePasteles <- read_sav("C:/Users/cbarbagelata/OneDrive - Obra Social Acción Social de Empresarios Asociación Civil/Escritorio/Camila B/Estadistica II/Final/p301.sav")
-head(BasePasteles)
-```
+
 ---
 
 ### Resolución
- 
-En este ejercicio se nos propone analizar si una serie de variables afectan el comportamiento de una variable dependiente. Para determinar en que medida las variables se constituyen como variables predictoras de la variable dependiente, debemos construir un modelo de regresion lineal multiple. 
 
-**Punto 1** Nivel de asociación lineal de las variables predictoras con la variable H.
+#### Nivel de asociación lineal de las posibles variables predictoras con la variable H.m
 
-Para analizar en nivel de asociacion entre nuestra variable a predecir (H) y las posibles variables predictoras, una opcion es realizar gráficos de dispersion: 
+A. Gráficos de dispersion: 
  
 ```{r}
-p301 <- BasePasteles[, 2:13]#Dado que la variable YEAR permite identificar cuando fueron recolectados los datos, actuando como un dato identificatorio, voy adejar de considerar esta variable para el analisis. 
+p301 <- BasePasteles[, 2:13] #Dado que la variable YEAR permite identificar cuando fueron recolectados los datos, actuando como un dato identificatorio, voy adejar de considerar esta variable para el analisis. 
 
 #Grafico de dispersión: 
 p301 %>%
@@ -187,12 +72,12 @@ p301 %>%
     geom_point() + facet_wrap(~ var, scales = "free") + theme_minimal()
 ```
 
-**Respuesta - Conclusiones (pto 1)**: A partir de los graficos podemos observar si existe cierta asociacion entre las variables posibles predictoras y la variable dependiente. Tambien se puede ver como se da esta asociacion entre las variables.En algunos casos, las variables se relacionan de manera positiva, es decir que ambas variables aumentan conjuntamente (FTP, G, GR, HE, LIC, NMAN, WE, YEAR). En cambio, en otros casos se vinculan de manera negativa (CLEAR, W). 
-Pero en dos graficos se observa que no existe correlacion entre las variables, este es el caso de la variable UNEMP y M.
+A partir de los graficos se puede observar si existe cierta asociacion entre las variables posibles predictoras y la variable dependiente, y como se da esta asociacion entre las variables. 
+En algunos casos, las variables se relacionan de manera positiva, es decir que ambas variables aumentan conjuntamente (FTP, G, GR, HE, LIC, NMAN, WE, YEAR). En otros casos se vinculan de manera negativa (CLEAR, W). Pero en dos graficos se observa que no existe correlacion entre las variables, este es el caso de la variable UNEMP y M.
 
-**Punto 2** Regresión lineal múltiple
+B. Análisis de Correlación de Pearson: Determinar en que medida las variables predictivas predicen el comportamiento de la variable h (la tasa de homicidios)
 
-Para determinar en que medida las variables predictivas predicen el comportamiento de la variable h (la tasa de homicidios) aplico Análisis de Correlación de Pearson. Con este metodo obtenemos el Coeficiente de Correlación de Pearson (R) que de acuerdo a su  magnitud y su signo se puede ver la intensidad y el tipo asociacion entre las variables.
+Obtenemos el Coeficiente de Correlación de Pearson (R) que, de acuerdo a su  magnitud y su signo, permite ver la intensidad y el tipo asociacion entre las variables.
 
 Primero debemos aplicar la funcion lm() para luego  aplicar ols_correlations y ver la correlacion de cada variable potencialmente predictora con la variable h
 
@@ -207,13 +92,13 @@ ols_correlations(model)
 Analisis de los resultados: 
 
 * El valor de Zero Order indica la correlacion de cada variable independiente con la variable dependiente (h). La magnitud de de Zero Order  indica el nivel de asociacion y su signo señala el tipo de asociacion. Podemos concluir que:
-
 * Aquellas variables con un coeficiente cercano a 0 poseen menor nivel de asociacion con la variable h (ej: UNEMP, M). 
 * Aquellas variables con valores cercano a 1, indican una mayor correlacion entre las variables (ej: FTP, CLEAR, W, NMAN, G, HE, WE).
- 
 * Aquellas variables con un Zero Order de signo positivo indica que a valores altos de una variable corresponden valores altos de la otra. Es decir, ambas variables cambian en el mismo sentido.Esto confirma lo observado en el grafico de dispersion. 
-
 * Aquellas variables con valores negativos cambian en sentido contrario, es decir, a valores altos de una variable corresponden valores bajos de la otra. 
+
+
+C. Regresion Lineal Multiple: Metodo de seleccion automatica para los mejores predictores entre las variables disponibles.    
 
 Aplico metodo de seleccion automatica (con probabilidad de entrada 0.10 y de salida del modelo 0.15) que va a elegir dentro de las variables disponibles, aquellas que realicen un aporte estadísticamente significativo al modelo. De esta manera se construye un modelo en el que se evaluo cada variable que forma parte, dejando unicamente aquellas relevantes para predecir el comportamiento de la variable dependiente (tasa de homicidios). 
 
@@ -233,28 +118,24 @@ modelo_ejer2 <- lm( H ~ UNEMP +LIC+ WE ,
 
 summary(modelo_ejer2)
 ```
-**Respuesta - Conclusiones (pto 2)**:Al analizar este modelo, vemos que las variables incluidas son significativas para predecir el comportamiento de la variable dependiente (tasa de homicidios). 
+ Al analizar este modelo, vemos que las variables incluidas son significativas para predecir el comportamiento de la variable dependiente (tasa de homicidios). 
 De acuerdo a los valores que muestra la tabla, podemos concluir que el comportamiento de las variables predictoras respecto de la variable dependiente se da de la siguiente manera: Cuando la variable UNEMP aumenta una unidad, la tasa de hominicios aumenta en 1.43. 
 Este modelo explica en un 99,72% el comportamiento de la variable tasa de homicidios.  
 
-**Punto 3** Informar qué información da el coeficiente de determinación. 
-
-**Respuesta - Conclusiones (pto 3)** El coeficiente de determinación indica la varianza de la variable dependiente que se explica mediante el modelo seleccionado. Es por esto que permite cuantificar la bondad del modelo para predecir el valor de las observaciones indicando la varianza de la variable que se busca explicar a traves del modelo.   
+El coeficiente de determinación indica la varianza de la variable dependiente que se explica mediante el modelo seleccionado. Es por esto que permite cuantificar la bondad del modelo para predecir el valor de las observaciones indicando la varianza de la variable que se busca explicar a traves del modelo.   
 Es importante tener en cuenta que miesntras mas predictores se seleccionen para contruir el modelo, mayor es el valor que va a tomar el coficiente de determinacion (r2), en este sentido, no es un coeficiente util para comparar modelos con distinta cantidad de predictores, con ese fin debe utilizarle el r2 ajustado que penaliza al r2 de acuerdo a la cantidad de variables predictoras que se incluya en el modelo.  
-En el modelo seleccionado se observa que r2 ajustado es de 0.9972 (bondad del ajuste del modelo), es decir, la regresion es estadisticamente significativa.  (**Punto 5**)
+En el modelo seleccionado se observa que r2 ajustado es de 0.9972 (**bondad del ajuste del modelo**), es decir, la regresion es estadisticamente significativa. 
  
-**Punto 4** Supuestos necesarios para definir la prueba inferencial de los estimadores de los parámeros son:
+D. Supuestos necesarios para definir la prueba inferencial de los estimadores de los parámeros son:
 
 * Supuesto de linealidad: entre los predictores y la variable dependiente
 * Homocedasticidad: varianza constante de los residuos. 
 * Normalidad  
 * Muestras independientes 
 
-**Punto 6**  Realizar un análisis de los residuos del modelo para evaluar el cumplimiento de los supuestos. Para esto, realizar gráficos de los residuos con el valor predicho. 
+E. Análisis de los residuos del modelo para evaluar el cumplimiento de los supuestos. Para esto, realizar gráficos de los residuos con el valor predicho. 
  
-Muchos de los supuestos del modelo de regresion lineal pueden evaluarse analizando los residuos.
-
-Para el analisis de los residuos se realiza un test de normalidad, se debe comprobar si la distribucion de los valores atipicos se distribuyen de forma normal con media cero. 
+Muchos de los supuestos del modelo de regresion lineal pueden evaluarse analizando los residuos. Para el analisis de los residuos se realiza un test de normalidad, se debe comprobar si la distribucion de los valores atipicos se distribuyen de forma normal con media cero. 
 
 ```{r}
 #Grafico de residuos
@@ -263,7 +144,7 @@ ols_plot_resid_qq(modelo_ejer2)
 
 Alli vemos que algunos valores se alejan de la normal.
 
-**Punto 7** Analizar la colinealidad de las variables predictoras presentes en la ecuación;
+F. Se analiza la colinealidad de las variables predictoras presentes en la ecuación;
 
 Para el analisis de la multicolinealidad de las variables independientes se va utilizar la funcion ols_vif_tol que a traves de los valores VIF y TOL nos indica cuando las variables independientes que fueron seleccionadas como predictoras en el modelo  tienen o no una fuerte asociación con el resto de los predictores. 
 
@@ -274,7 +155,7 @@ diagmulticolinealidad
  
 A partir de los valores que arroja la funcion concluimos que no existe multicolinealidad entre las variables seleccionadas por el modelo, en tanto los valores de tolerancia no son menores a 0.1 y los valores VIF no superan a 10.   
 
-**Punto 8**  Analizar la presencia de observaciones atípicas y/o influyentes.
+G. Se analiza la presencia de observaciones atípicas y/o influyentes.
 
 ```{r} 
 #####  Gráfico de residuos studentizado
@@ -310,7 +191,7 @@ summary(modelo_SinOutliers)
 
 ---
 
-## Ejercicio 3. Regresión Logística  | Peso al nacer
+## Regresión Logística 
 
 Consigna:
 
